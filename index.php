@@ -23,7 +23,7 @@ $success_message = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action'])) {
         
-        // LOGIN HANDLER
+        // USER LOGIN HANDLER
         if ($_POST['action'] == 'login') {
             $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
             $password = trim($_POST['password']);
@@ -47,12 +47,52 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         $_SESSION['user_id'] = $user['id'];
                         $_SESSION['user_email'] = $user['email'];
                         $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
+                        $_SESSION['user_type'] = 'user';
                         
-                        // Redirect to dashboard or protected page
+                        // Redirect to user dashboard
                         header("Location: dashboard.php");
                         exit();
                     } else {
                         $error_message = "Invalid email or password.";
+                    }
+                } catch(PDOException $e) {
+                    $error_message = "An error occurred. Please try again.";
+                }
+            }
+        }
+        
+        // ADMIN LOGIN HANDLER
+        if ($_POST['action'] == 'admin_login') {
+            $username = trim($_POST['admin_username']);
+            $password = trim($_POST['admin_password']);
+            
+            if (empty($username)) {
+                $error_message = "Please enter your admin username.";
+            } elseif (empty($password)) {
+                $error_message = "Please enter your admin password.";
+            } else {
+                try {
+                    $stmt = $pdo->prepare("SELECT id, username, password, full_name, role, status FROM admins WHERE username = ? AND status = 'active'");
+                    $stmt->execute([$username]);
+                    $admin = $stmt->fetch();
+                    
+                    if ($admin && password_verify($password, $admin['password'])) {
+                        // Update last login
+                        $update_stmt = $pdo->prepare("UPDATE admins SET last_login = NOW() WHERE id = ?");
+                        $update_stmt->execute([$admin['id']]);
+                        
+                        // Set session variables
+                        $_SESSION['admin_id'] = $admin['id'];
+                        $_SESSION['admin_username'] = $admin['username'];
+                        $_SESSION['admin_name'] = $admin['full_name'];
+                        $_SESSION['admin_role'] = $admin['role'];
+                        $_SESSION['user_type'] = 'admin';
+                        
+                        // Redirect to admin dashboard
+                        header("Location: admin_dashboard.php");
+                        exit();
+                    } else {
+                        $error_message = "Invalid admin credentials.";
                     }
                 } catch(PDOException $e) {
                     $error_message = "An error occurred. Please try again.";
@@ -103,8 +143,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 // Check if user is already logged in
-if (isset($_SESSION['user_id'])) {
+if (isset($_SESSION['user_id']) && $_SESSION['user_type'] == 'user') {
     header("Location: dashboard.php");
+    exit();
+}
+
+// Check if admin is already logged in
+if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
+    header("Location: admin_dashboard.php");
     exit();
 }
 ?>
@@ -201,6 +247,15 @@ if (isset($_SESSION['user_id'])) {
             color: white;
         }
 
+        .nav-pill.admin {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .nav-pill.admin:hover {
+            background: linear-gradient(45deg, #c0392b, #a93226);
+        }
+
         .main-content {
             flex: 1;
             display: flex;
@@ -292,6 +347,13 @@ if (isset($_SESSION['user_id'])) {
             font-weight: 300;
         }
 
+        .form-title.admin {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
         .form-group {
             margin-bottom: 25px;
         }
@@ -316,6 +378,11 @@ if (isset($_SESSION['user_id'])) {
             outline: none;
             border-color: #00ff88;
             box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .form-input.admin:focus {
+            border-color: #e74c3c;
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.2);
         }
 
         .form-options {
@@ -368,6 +435,14 @@ if (isset($_SESSION['user_id'])) {
         .submit-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+        }
+
+        .submit-button.admin {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+
+        .submit-button.admin:hover {
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
         }
 
         .form-switch {
@@ -423,6 +498,17 @@ if (isset($_SESSION['user_id'])) {
 
         .form-row .form-group {
             flex: 1;
+        }
+
+        .admin-notice {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            text-align: center;
         }
 
         @media (max-width: 1024px) {
@@ -485,7 +571,8 @@ if (isset($_SESSION['user_id'])) {
             <a href="#" class="nav-pill">Services</a>
             <a href="#" class="nav-pill">Tips</a>
             <a href="#" class="nav-pill">Contact</a>
-            <button type="button" class="nav-pill active" onclick="showLogin()">Log In</button>
+            <button type="button" class="nav-pill active" onclick="showLogin()">User Login</button>
+            <button type="button" class="nav-pill admin" onclick="showAdminLogin()">Admin</button>
         </nav>
     </header>
 
@@ -512,10 +599,10 @@ if (isset($_SESSION['user_id'])) {
                     <div class="alert alert-success"><?php echo htmlspecialchars($success_message); ?></div>
                 <?php endif; ?>
 
-                <!-- Login Form -->
+                <!-- User Login Form -->
                 <form id="loginForm" method="POST" style="display: block;">
                     <input type="hidden" name="action" value="login">
-                    <h2 class="form-title">Login</h2>
+                    <h2 class="form-title">User Login</h2>
                     
                     <div class="form-group">
                         <input type="email" name="email" class="form-input" placeholder="Email" required>
@@ -533,6 +620,27 @@ if (isset($_SESSION['user_id'])) {
                     <button type="submit" class="submit-button">Login</button>
                     <div class="form-switch">
                         Don't have an account? <button type="button" onclick="showRegister()">Register</button>
+                    </div>
+                </form>
+
+                <!-- Admin Login Form -->
+                <form id="adminLoginForm" method="POST" style="display: none;">
+                    <input type="hidden" name="action" value="admin_login">
+                    <h2 class="form-title admin">Admin Login</h2>
+                    
+                    <div class="admin-notice">
+                        ⚠️ Authorized Personnel Only
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="text" name="admin_username" class="form-input admin" placeholder="Admin Username" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" name="admin_password" class="form-input admin" placeholder="Admin Password" required>
+                    </div>
+                    <button type="submit" class="submit-button admin">Admin Login</button>
+                    <div class="form-switch">
+                        <button type="button" onclick="showLogin()">← Back to User Login</button>
                     </div>
                 </form>
 
@@ -568,17 +676,33 @@ if (isset($_SESSION['user_id'])) {
     </main>
 
     <footer class="footer">
-        Copyright 2024 Compass North. All Rights Reserved.
+        Copyright 2025 PARA KAY SEBBY. All Rights Reserved.
     </footer>
 
     <script>
         function showLogin() {
             document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('adminLoginForm').style.display = 'none';
             document.getElementById('registerForm').style.display = 'none';
+            
+            // Update nav pill active states
+            document.querySelectorAll('.nav-pill').forEach(pill => pill.classList.remove('active'));
+            document.querySelector('.nav-pill:nth-last-child(2)').classList.add('active');
+        }
+
+        function showAdminLogin() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('adminLoginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            
+            // Update nav pill active states
+            document.querySelectorAll('.nav-pill').forEach(pill => pill.classList.remove('active'));
+            document.querySelector('.nav-pill:last-child').classList.add('active');
         }
 
         function showRegister() {
             document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('adminLoginForm').style.display = 'none';
             document.getElementById('registerForm').style.display = 'block';
         }
 
