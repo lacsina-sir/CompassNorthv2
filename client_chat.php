@@ -22,6 +22,7 @@ while ($row = $result->fetch_assoc()) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Client Chats | Titulo</title>
@@ -78,7 +79,7 @@ while ($row = $result->fetch_assoc()) {
       background-color: white;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       height: 500px;
       display: flex;
       flex-direction: column;
@@ -142,18 +143,19 @@ while ($row = $result->fetch_assoc()) {
     }
   </style>
 </head>
+
 <body>
 
   <!-- Top Navigation -->
   <div class="topnav">
     <div class="brand">Titulo Client Portal</div>
     <div class="nav-links">
-      <a href="dashboard.php">Dashboard</a>
-      <a href="files.php">Files</a>
-      <a href="profile.php">Profile</a>
-      <a href="chats.php">Chats</a>
-      <a href="updates.php">Updates</a>
-      <a href="logout.php">Logout</a>
+      <a href="client_dashboard.php">Dashboard</a>
+      <a href="client_files.php">Files</a>
+      <a href="client_profile.php">Profile</a>
+      <a href="client_chat.php">Chats</a>
+      <a href="client-side_tracking.php">Updates</a>
+      <a href="#">Logout</a>
     </div>
   </div>
 
@@ -177,4 +179,5 @@ while ($row = $result->fetch_assoc()) {
   </div>
 
 </body>
+
 </html>

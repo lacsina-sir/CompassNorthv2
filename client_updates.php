@@ -1,6 +1,17 @@
 <?php
-// Later, you can fetch data from your database here
-// For now, everything is static.
+// DB connection
+$host = "localhost";
+$user = "root";
+$password = "";
+$dbname = "compass_north";
+
+$conn = new mysqli($host, $user, $password, $dbname);
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
+}
+
+$sql = "SELECT * FROM pending_updates WHERE is_done = 0 ORDER BY last_updated DESC";
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -121,30 +132,40 @@
       <input type="text" placeholder="Search pending updates...">
     </div>
 
-    <!-- Later this part can be replaced with a PHP loop pulling from a database -->
-    <div class="card">
-      <h3>Client: Juan Dela Cruz</h3>
-      <p>Status: Waiting for Signature</p>
-      <p>Last Updated: July 30, 2025</p>
-      <div class="actions">
-        <button>Edit</button>
-        <button>Mark as Done</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Client: Maria Santos</h3>
-      <p>Status: For Payment</p>
-      <p>Last Updated: July 28, 2025</p>
-      <div class="actions">
-        <button>Edit</button>
-        <button>Mark as Done</button>
-      </div>
-    </div>
-
-    <!-- Add more cards dynamically later -->
+    <?php if ($result && $result->num_rows > 0): ?>
+      <table border="1" cellpadding="10" cellspacing="0">
+        <thead>
+          <tr>
+            <th>Client Name</th>
+            <th>Status</th>
+            <th>Last Updated</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php while ($row = $result->fetch_assoc()): ?>
+            <tr>
+              <td><?= htmlspecialchars($row['client_name']) ?></td>
+              <td><?= htmlspecialchars($row['status']) ?></td>
+              <td><?= date('F j, Y', strtotime($row['last_updated'])) ?></td>
+              <td>
+                <form method="post" action="update_pending_status.php" style="display:inline;">
+                  <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                  <button type="submit" name="edit">Edit</button>
+                  <button type="submit" name="mark_done">Mark as Done</button>
+                </form>
+              </td>
+            </tr>
+          <?php endwhile; ?>
+        </tbody>
+      </table>
+    <?php else: ?>
+      <p>No pending updates found.</p>
+    <?php endif; ?>
 
   </div>
 
 </body>
 </html>
+
+<?php $conn->close(); ?>

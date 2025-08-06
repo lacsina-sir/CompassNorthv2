@@ -1,11 +1,58 @@
+<!-- OLD CODE -->
+<!-- // Example PHP data; replace with database fetch later
+// $clientName = "Juan Dela Cruz";
+// $clientEmail = "juan@example.com";
+// $clientContact = "0917-123-4567";
+// $clientAddress = "123 San Agustin St, Gapan City, Nueva Ecija";
+// $accountCreated = "July 1, 2025";
+?> -->
+
 <?php
-// Example PHP data; replace with database fetch later
-$clientName = "Juan Dela Cruz";
-$clientEmail = "juan@example.com";
-$clientContact = "0917-123-4567";
-$clientAddress = "123 San Agustin St, Gapan City, Nueva Ecija";
-$accountCreated = "July 1, 2025";
+session_start();
+
+// Redirect if not logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
+}
+
+// DB connection
+$host = 'localhost';
+$dbUser = 'root';
+$dbPass = '';
+$dbName = 'compass_north';
+
+$conn = new mysqli($host, $dbUser, $dbPass, $dbName);
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+$userId = $_SESSION['user_id'];
+
+$sql = "SELECT first_name, last_name, email, contact_number, address, created_at FROM users WHERE id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $result->num_rows > 0) {
+    $user = $result->fetch_assoc();
+    $clientName = $user['first_name'] . ' ' . $user['last_name'];
+    $clientEmail = $user['email'];
+    $clientContact = $user['contact_number'] ?: 'Not provided';
+    $clientAddress = $user['address'] ?: 'Not provided';
+    $accountCreated = date("F j, Y", strtotime($user['created_at']));
+} else {
+    // Fallback if something goes wrong
+    $clientName = "Unknown User";
+    $clientEmail = "-";
+    $clientContact = "-";
+    $clientAddress = "-";
+    $accountCreated = "-";
+}
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
