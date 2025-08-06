@@ -131,7 +131,7 @@ try {
     <a href="survey_files.php">Survey Files</a>
     <a href="pending_updates.php">Pending Updates</a>
     <a href="settings.php">Settings</a>
-    <a href="#">Logout</a>
+    <a href="index.php">Logout</a>
   </div>
 
   <div class="main">

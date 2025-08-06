@@ -153,7 +153,7 @@ while ($row = $result->fetch_assoc()) {
       <a href="client_updates.php">Updates</a>
       <a href="survey_files.php">Survey Files</a>
       <a href="admin_chat.php">Chats</a>
-      <a href="logout.php">Logout</a>
+      <a href="index.php">Logout</a>
     </div>
   </div>
 

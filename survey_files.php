@@ -101,7 +101,7 @@
     <a href="client_updates.php">Client Updates</a>
     <a href="pending_updates.php">Pending Updates</a>
     <a href="settings.php">Settings</a>
-    <a href="#">Logout</a>
+    <a href="index.php">Logout</a>
   </div>
 
   <div class="main">
