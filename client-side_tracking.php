@@ -1,3 +1,53 @@
+<?php
+session_start();
+
+// Redirect if not logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
+}
+
+// Database connection
+$host = 'localhost';
+$username = 'root';
+$password = '';
+$dbname = 'compass_north';
+
+$conn = new mysqli($host, $username, $password, $dbname);
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+$user_id = $_SESSION['user_id'];
+
+// Fetch client name 
+$client_sql = "SELECT first_name FROM users WHERE id = ?";
+$client_stmt = $conn->prepare($client_sql);
+$client_stmt->bind_param("i", $user_id);
+$client_stmt->execute();
+$client_result = $client_stmt->get_result();
+$client = $client_result->fetch_assoc();
+$client_name = $client['first_name'] ?? 'Client';
+
+// Fetch progress steps
+$progress_sql = "SELECT step_name, status FROM progress_tracker WHERE client_id = ? ORDER BY step_order ASC";
+$progress_stmt = $conn->prepare($progress_sql);
+$progress_stmt->bind_param("i", $user_id);
+$progress_stmt->execute();
+$progress_result = $progress_stmt->get_result();
+
+// Fetch milestone dates
+$dates_sql = "SELECT request_date, site_visit_date, estimated_completion FROM milestone_dates WHERE client_id = ?";
+$dates_stmt = $conn->prepare($dates_sql);
+$dates_stmt->bind_param("i", $user_id);
+$dates_stmt->execute();
+$dates_result = $dates_stmt->get_result();
+$dates = $dates_result->fetch_assoc();
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -391,66 +441,50 @@
         </nav>
     </header>
 
-    <!-- Main Content -->
+   <!-- Main Content -->
     <div class="main-container">
         <div class="left-section">
             <!-- Welcome Section -->
             <div class="welcome-section fade-in">
-                <div class="welcome-text">Welcome <span class="client-name">[Client Name]</span></div>
+                <div class="welcome-text">Welcome <span class="client-name"><?= htmlspecialchars($client_name) ?></span>
+                </div>
             </div>
 
             <!-- Progress Tracker -->
             <div class="progress-section fade-in">
                 <h2 class="progress-title">Progress Tracker</h2>
-                
-                <div class="progress-item completed">
-                    <div class="progress-label">Request Submitted</div>
-                    <div class="status-indicator"></div>
-                </div>
 
-                <div class="progress-item current">
-                    <div class="progress-label">Site Visit Scheduled</div>
-                    <div class="status-indicator"></div>
-                </div>
-
-                <div class="progress-item">
-                    <div class="progress-label">Survey in Progress</div>
-                    <div class="status-indicator"></div>
-                </div>
-
-                <div class="progress-item">
-                    <div class="progress-label">Documentation Review</div>
-                    <div class="status-indicator"></div>
-                </div>
-
-                <div class="progress-item">
-                    <div class="progress-label">Final Report Ready</div>
-                    <div class="status-indicator"></div>
-                </div>
+                <?php while ($row = $progress_result->fetch_assoc()): ?>
+                    <div class="progress-item <?= htmlspecialchars($row['status']) ?>">
+                        <div class="progress-label"><?= htmlspecialchars($row['step_name']) ?></div>
+                        <div class="status-indicator"></div>
+                    </div>
+                <?php endwhile; ?>
             </div>
+
         </div>
 
-        <div class="right-section">
-            <!-- Dates Section -->
-            <div class="dates-section fade-in">
-                <h3 class="dates-title">Dates</h3>
-                
+        <div class="dates-section fade-in">
+            <h3 class="dates-title">Dates</h3>
+
+            <?php if ($dates): ?>
                 <div class="date-item">
                     <div class="date-label">Request Date</div>
-                    <div class="date-value">Jan 15, 2025</div>
+                    <div class="date-value"><?= date("M j, Y", strtotime($dates['request_date'])) ?></div>
                 </div>
-
                 <div class="date-item current-date">
                     <div class="date-label">Site Visit</div>
-                    <div class="date-value">Jan 22, 2025</div>
+                    <div class="date-value"><?= date("M j, Y", strtotime($dates['site_visit_date'])) ?></div>
                 </div>
-
                 <div class="date-item">
                     <div class="date-label">Est. Completion</div>
-                    <div class="date-value">Feb 05, 2025</div>
+                    <div class="date-value"><?= date("M j, Y", strtotime($dates['estimated_completion'])) ?></div>
                 </div>
-            </div>
+            <?php else: ?>
+                <p>No milestone dates found.</p>
+            <?php endif; ?>
         </div>
+
     </div>
 
     <script>
@@ -501,4 +535,5 @@
         // updateClientName('John Doe');
     </script>
 </body>
+
 </html>

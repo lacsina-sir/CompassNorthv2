@@ -1,29 +1,38 @@
+<!-- BAGONG CODE, SAMPLE FILE  -->
 <?php
-// Dummy data - eventually replace this with DB calls
-$surveyFiles = [
-  [
-    "project" => "Subdivision Survey",
-    "file" => "subdivision_plan.pdf",
-    "uploaded" => "July 25, 2025",
-    "status" => "Signed & Ready for Pickup"
-  ],
-  [
-    "project" => "Topographic Survey",
-    "file" => "topo_data_sheet.docx",
-    "uploaded" => "July 23, 2025",
-    "status" => "Processing"
-  ],
-  [
-    "project" => "Title Verification",
-    "file" => "land_title_101.jpg",
-    "uploaded" => "July 20, 2025",
-    "status" => "Awaiting Approval"
-  ]
-];
+session_start();
+
+// Redirect if not logged in
+if (!isset($_SESSION['user_id'])) {
+  header("Location: index.php");
+  exit();
+}
+
+// Database connection
+$host = 'localhost';
+$username = 'root';
+$password = '';
+$dbname = 'compass_north';
+
+$conn = new mysqli($host, $username, $password, $dbname);
+
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
+}
+
+$userId = $_SESSION['user_id'];
+$sql = "SELECT project, file_name, uploaded_date, status FROM survey_files WHERE user_id = ? ORDER BY uploaded_date DESC";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+$surveyFiles = $result->fetch_all(MYSQLI_ASSOC);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Survey Files | Titulo</title>
@@ -103,7 +112,7 @@ $surveyFiles = [
       padding: 15px;
       border-left: 5px solid #1d3557;
       border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
 
     .file-card h3 {
@@ -122,16 +131,17 @@ $surveyFiles = [
     }
   </style>
 </head>
+
 <body>
 
   <div class="topnav">
     <div class="brand">Titulo Client Portal</div>
     <div class="nav-links">
-      <a href="dashboard.php">Dashboard</a>
-      <a href="survey-files.php">Files</a>
-      <a href="profile.php">Profile</a>
-      <a href="chats.php">Chats</a>
-      <a href="updates.php">Updates</a>
+      <a href="client_dashboard.php">Dashboard</a>
+      <a href="client_files.php">Files</a>
+      <a href="client_profile.php">Profile</a>
+      <a href="client_chat.php">Chats</a>
+      <a href="client-side_tracking.php">Tracking</a>
       <a href="logout.php">Logout</a>
     </div>
   </div>
@@ -149,13 +159,16 @@ $surveyFiles = [
         <div class="file-card">
           <h3>Project: <?= htmlspecialchars($file['project']) ?></h3>
           <p>
-            File: <?= htmlspecialchars($file['file']) ?><br>
-            <small>Uploaded: <?= htmlspecialchars($file['uploaded']) ?> | Status: <?= htmlspecialchars($file['status']) ?></small>
+            File: <?= htmlspecialchars($file['file_name']) ?><br>
+            <small>Uploaded: <?= htmlspecialchars($file['uploaded_date']) ?> | Status:
+              <?= htmlspecialchars($file['status']) ?></small>
           </p>
+
         </div>
       <?php endforeach; ?>
     </div>
   </div>
 
 </body>
+
 </html>

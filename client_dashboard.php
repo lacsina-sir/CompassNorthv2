@@ -3,7 +3,9 @@
 $host = "localhost";
 $user = "root";
 $password = "";
-$dbname = "titulo";
+// $dbname = "titulo";
+$dbname = "compass_north";
+
 
 $conn = new mysqli($host, $user, $password, $dbname);
 
@@ -118,10 +120,10 @@ $result = $conn->query($sql);
     <div class="brand">Titulo Client Portal</div>
     <div class="nav-links">
       <a href="client_dashboard.php">Dashboard</a>
-      <a href="client_files.html">Files</a>
-      <a href="client_profile.html">Profile</a>
-      <a href="client_chat.html">Chats</a>
-      <a href="client-side_tracking.php">Updates</a>
+      <a href="client_files.php">Files</a>
+      <a href="client_profile.php">Profile</a>
+      <a href="client_chat.php">Chats</a>
+      <a href="client-side_tracking.php">Tracking</a>      
       <a href="#">Logout</a>
     </div>
   </div>

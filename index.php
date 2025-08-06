@@ -9,7 +9,7 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
 
@@ -22,12 +22,12 @@ $success_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action'])) {
-        
+
         // USER LOGIN HANDLER
         if ($_POST['action'] == 'login') {
             $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
             $password = trim($_POST['password']);
-            
+
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $error_message = "Please enter a valid email address.";
             } elseif (empty($password)) {
@@ -37,35 +37,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $stmt = $pdo->prepare("SELECT id, email, password, first_name, last_name, status FROM users WHERE email = ? AND status = 'active'");
                     $stmt->execute([$email]);
                     $user = $stmt->fetch();
-                    
+
                     if ($user && password_verify($password, $user['password'])) {
                         // Update last login
                         $update_stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
                         $update_stmt->execute([$user['id']]);
-                        
+
                         // Set session variables
                         $_SESSION['user_id'] = $user['id'];
                         $_SESSION['user_email'] = $user['email'];
                         $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
                         $_SESSION['user_type'] = 'user';
-                        
-                        // Redirect to user dashboard
-                        header("Location: dashboard.php");
+
+                        // Redirect to user dashboard | change to client_dashboard.php wala naman kasing file ng dashboard.ph
+                        header("Location: client_dashboard.php");
                         exit();
                     } else {
                         $error_message = "Invalid email or password.";
                     }
-                } catch(PDOException $e) {
+                } catch (PDOException $e) {
                     $error_message = "An error occurred. Please try again.";
                 }
             }
         }
-        
+
         // ADMIN LOGIN HANDLER
         if ($_POST['action'] == 'admin_login') {
             $username = trim($_POST['admin_username']);
             $password = trim($_POST['admin_password']);
-            
+
             if (empty($username)) {
                 $error_message = "Please enter your admin username.";
             } elseif (empty($password)) {
@@ -75,31 +75,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $stmt = $pdo->prepare("SELECT id, username, password, full_name, role, status FROM admins WHERE username = ? AND status = 'active'");
                     $stmt->execute([$username]);
                     $admin = $stmt->fetch();
-                    
+
                     if ($admin && password_verify($password, $admin['password'])) {
                         // Update last login
                         $update_stmt = $pdo->prepare("UPDATE admins SET last_login = NOW() WHERE id = ?");
                         $update_stmt->execute([$admin['id']]);
-                        
+
                         // Set session variables
                         $_SESSION['admin_id'] = $admin['id'];
                         $_SESSION['admin_username'] = $admin['username'];
                         $_SESSION['admin_name'] = $admin['full_name'];
                         $_SESSION['admin_role'] = $admin['role'];
                         $_SESSION['user_type'] = 'admin';
-                        
+
                         // Redirect to admin dashboard
                         header("Location: admin_dashboard.php");
                         exit();
                     } else {
                         $error_message = "Invalid admin credentials.";
                     }
-                } catch(PDOException $e) {
+                } catch (PDOException $e) {
                     $error_message = "An error occurred. Please try again.";
                 }
             }
         }
-        
+
         // REGISTRATION HANDLER
         if ($_POST['action'] == 'register') {
             $first_name = trim($_POST['first_name']);
@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
             $password = trim($_POST['password']);
             $confirm_password = trim($_POST['confirm_password']);
-            
+
             // Validation
             if (empty($first_name) || empty($last_name)) {
                 $error_message = "Please enter your first and last name.";
@@ -122,19 +122,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     // Check if email already exists
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
                     $stmt->execute([$email]);
-                    
+
                     if ($stmt->fetch()) {
                         $error_message = "An account with this email already exists.";
                     } else {
                         // Hash password and insert user
                         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                        
+
                         $stmt = $pdo->prepare("INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)");
                         $stmt->execute([$first_name, $last_name, $email, $hashed_password]);
-                        
+
                         $success_message = "Account created successfully! You can now log in.";
                     }
-                } catch(PDOException $e) {
+                } catch (PDOException $e) {
                     $error_message = "An error occurred. Please try again.";
                 }
             }
@@ -144,7 +144,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Check if user is already logged in
 if (isset($_SESSION['user_id']) && $_SESSION['user_type'] == 'user') {
-    header("Location: dashboard.php");
+    //change file name
+    header("Location: client_dashboard.php");
     exit();
 }
 
@@ -157,6 +158,7 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -516,11 +518,11 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
                 flex-direction: column;
                 gap: 50px;
             }
-            
+
             .welcome-title {
                 font-size: 3.5rem;
             }
-            
+
             .login-section {
                 flex: none;
                 width: 100%;
@@ -534,19 +536,19 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
                 gap: 20px;
                 padding: 20px;
             }
-            
+
             .nav-pills {
                 order: -1;
             }
-            
+
             .welcome-title {
                 font-size: 2.8rem;
             }
-            
+
             .welcome-description {
                 font-size: 1.1rem;
             }
-            
+
             .form-container {
                 padding: 40px 30px;
             }
@@ -558,6 +560,7 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
         }
     </style>
 </head>
+
 <body>
     <header class="header">
         <div class="logo-section">
@@ -584,7 +587,8 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
             </h1>
             <p class="welcome-description">
                 Your trusted partner in land surveying and property services.<br><br>
-                Log in to access project updates, secure your property, and explore valuable resources for your peace of mind.
+                Log in to access project updates, secure your property, and explore valuable resources for your peace of
+                mind.
             </p>
             <div class="play-button"></div>
         </section>
@@ -594,7 +598,7 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
                 <?php if ($error_message): ?>
                     <div class="alert alert-error"><?php echo htmlspecialchars($error_message); ?></div>
                 <?php endif; ?>
-                
+
                 <?php if ($success_message): ?>
                     <div class="alert alert-success"><?php echo htmlspecialchars($success_message); ?></div>
                 <?php endif; ?>
@@ -603,7 +607,7 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
                 <form id="loginForm" method="POST" style="display: block;">
                     <input type="hidden" name="action" value="login">
                     <h2 class="form-title">User Login</h2>
-                    
+
                     <div class="form-group">
                         <input type="email" name="email" class="form-input" placeholder="Email" required>
                     </div>
@@ -627,16 +631,18 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
                 <form id="adminLoginForm" method="POST" style="display: none;">
                     <input type="hidden" name="action" value="admin_login">
                     <h2 class="form-title admin">Admin Login</h2>
-                    
+
                     <div class="admin-notice">
                         ⚠️ Authorized Personnel Only
                     </div>
-                    
+
                     <div class="form-group">
-                        <input type="text" name="admin_username" class="form-input admin" placeholder="Admin Username" required>
+                        <input type="text" name="admin_username" class="form-input admin" placeholder="Admin Username"
+                            required>
                     </div>
                     <div class="form-group">
-                        <input type="password" name="admin_password" class="form-input admin" placeholder="Admin Password" required>
+                        <input type="password" name="admin_password" class="form-input admin"
+                            placeholder="Admin Password" required>
                     </div>
                     <button type="submit" class="submit-button admin">Admin Login</button>
                     <div class="form-switch">
@@ -648,7 +654,7 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
                 <form id="registerForm" method="POST" style="display: none;">
                     <input type="hidden" name="action" value="register">
                     <h2 class="form-title">Register</h2>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <input type="text" name="first_name" class="form-input" placeholder="First Name" required>
@@ -661,10 +667,12 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
                         <input type="email" name="email" class="form-input" placeholder="Email" required>
                     </div>
                     <div class="form-group">
-                        <input type="password" name="password" class="form-input" placeholder="Password" minlength="6" required>
+                        <input type="password" name="password" class="form-input" placeholder="Password" minlength="6"
+                            required>
                     </div>
                     <div class="form-group">
-                        <input type="password" name="confirm_password" class="form-input" placeholder="Confirm Password" required>
+                        <input type="password" name="confirm_password" class="form-input" placeholder="Confirm Password"
+                            required>
                     </div>
                     <button type="submit" class="submit-button">Register</button>
                     <div class="form-switch">
@@ -684,7 +692,7 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('adminLoginForm').style.display = 'none';
             document.getElementById('registerForm').style.display = 'none';
-            
+
             // Update nav pill active states
             document.querySelectorAll('.nav-pill').forEach(pill => pill.classList.remove('active'));
             document.querySelector('.nav-pill:nth-last-child(2)').classList.add('active');
@@ -694,7 +702,7 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('adminLoginForm').style.display = 'block';
             document.getElementById('registerForm').style.display = 'none';
-            
+
             // Update nav pill active states
             document.querySelectorAll('.nav-pill').forEach(pill => pill.classList.remove('active'));
             document.querySelector('.nav-pill:last-child').classList.add('active');
@@ -708,15 +716,17 @@ if (isset($_SESSION['admin_id']) && $_SESSION['user_type'] == 'admin') {
 
         // Password confirmation validation
         const registerForm = document.getElementById('registerForm');
-        registerForm.addEventListener('submit', function(e) {
-            const password = document.querySelector('input[name="password"]').value;
-            const confirmPassword = document.querySelector('input[name="confirm_password"]').value;
-            
+        registerForm.addEventListener('submit', function (e) {
+            const password = registerForm.querySelector('input[name="password"]').value;
+            const confirmPassword = registerForm.querySelector('input[name="confirm_password"]').value;
+
             if (password !== confirmPassword) {
                 e.preventDefault();
                 alert('Passwords do not match!');
             }
         });
+
     </script>
 </body>
+
 </html>
