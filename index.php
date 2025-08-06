@@ -737,7 +737,7 @@
     </section>
 
     <footer class="footer">
-        Copyright 2025 PARA KAY SEBBY. All Rights Reserved.
+        Copyright 2025 TITULO.
     </footer>
 
     <script>

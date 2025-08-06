@@ -432,12 +432,12 @@ $dates = $dates_result->fetch_assoc();
             <div class="title-text">TITULO</div>
         </div>
         <nav class="nav-pills">
-            <a href="#" class="nav-pill">Home</a>
-            <a href="#" class="nav-pill">About</a>
-            <a href="#" class="nav-pill">Services</a>
-            <a href="#" class="nav-pill">Tips</a>
-            <a href="#" class="nav-pill">Contact</a>
-            <a href="#" class="nav-pill active">Log In</a>
+            <a href="client_dashboard.php" class="nav-pill">Home</a>
+            <a href="client_files.php" class="nav-pill">Files</a>
+            <a href="client_profile.php" class="nav-pill">Profiles</a>
+            <a href="client_chat.php" class="nav-pill">Chat</a>
+            <a href="client-side_tracking.php" class="nav-pill">Contact</a>
+            <a href="index.php" class="nav-pill active">Log In</a>
         </nav>
     </header>
 
