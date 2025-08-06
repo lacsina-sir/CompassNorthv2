@@ -142,7 +142,7 @@ $surveyFiles = $result->fetch_all(MYSQLI_ASSOC);
       <a href="client_profile.php">Profile</a>
       <a href="client_chat.php">Chats</a>
       <a href="client-side_tracking.php">Tracking</a>
-      <a href="logout.php">Logout</a>
+      <a href="index.php">Logout</a>
     </div>
   </div>
 

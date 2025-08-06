@@ -173,7 +173,7 @@ if ($result && $result->num_rows > 0) {
       <a href="client_profile.php">Profile</a>
       <a href="client_chat.php">Chats</a>
       <a href="client-side_tracking.php">Updates</a>
-      <a href="#">Logout</a>
+      <a href="index.php">Logout</a>
     </div>
   </div>
 
