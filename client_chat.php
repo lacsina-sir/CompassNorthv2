@@ -1,8 +1,22 @@
 <?php
-// Sample placeholder - handle the form submit
-$sentMessage = '';
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
+// Connect to MySQL
+$conn = new mysqli("localhost", "root", "", "your_database_name");
+
+// Handle new message submission
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['message'])) {
   $sentMessage = htmlspecialchars($_POST['message']);
+  $sender = 'client'; // Change based on login session if needed
+  $stmt = $conn->prepare("INSERT INTO messages (sender, message) VALUES (?, ?)");
+  $stmt->bind_param("ss", $sender, $sentMessage);
+  $stmt->execute();
+  $stmt->close();
+}
+
+// Fetch chat messages
+$messages = [];
+$result = $conn->query("SELECT * FROM messages ORDER BY timestamp ASC");
+while ($row = $result->fetch_assoc()) {
+  $messages[] = $row;
 }
 ?>
 
@@ -147,14 +161,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <div class="main">
     <div class="chat-container">
       <div class="messages">
-        <div class="message received">Hi Juan, we’ve received your request.</div>
-        <div class="message sent">Thank you! When will the survey start?</div>
-        <div class="message received">We’ll start by Monday. Please prepare your documents.</div>
-        <div class="message sent">Noted. Thank you!</div>
-
-        <?php if ($sentMessage): ?>
-          <div class="message sent"><?php echo $sentMessage; ?></div>
-        <?php endif; ?>
+        <?php foreach ($messages as $msg): ?>
+          <div class="message <?php echo $msg['sender'] === 'client' ? 'sent' : 'received'; ?>">
+            <?php echo htmlspecialchars($msg['message']); ?>
+          </div>
+        <?php endforeach; ?>
       </div>
 
       <!-- Chat input -->
